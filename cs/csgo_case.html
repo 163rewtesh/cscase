@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS:GO Case Opening</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 1200px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .case-container {
+            position: relative;
+            margin: 40px auto;
+            max-width: 800px;
+            height: 300px;
+        }
+
+        .roulette-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .roulette-track {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: max-content;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            transition: transform 3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            will-change: transform;
+            transform: translateZ(0);
+        }
+
+        .roulette-item {
+            min-width: 200px;
+            height: 180px;
+            margin: 0 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .roulette-item img {
+            width: 120px;
+            height: 100px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+
+        .roulette-item-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+
+        .roulette-highlight {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 200px;
+            border: 4px solid #ffeb3b;
+            border-radius: 20px;
+            pointer-events: none;
+            box-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 235, 59, 0.8); }
+            50% { box-shadow: 0 0 40px rgba(255, 235, 59, 1); }
+        }
+
+        .case {
+            width: 200px;
+            height: 60px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .case::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+        }
+
+        .case:hover::before {
+            animation: shine 0.5s ease;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .case:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .case.spinning {
+            animation: none;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(1800deg) scale(1.2); }
+            100% { transform: rotate(3600deg) scale(1); }
+        }
+
+        .items-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .item:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .item-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .item-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+
+        .item-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .item-rarity {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .result-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .result-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            animation: slideIn 0.5s ease-out;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: scale(0.8) translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .result-item {
+            margin: 20px 0;
+        }
+
+        .result-icon {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            animation: bounce 1s ease infinite;
+            overflow: hidden;
+        }
+
+        .result-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .result-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffeb3b;
+        }
+
+        .result-message {
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .close-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .close-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(238, 90, 36, 0.4);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffeb3b;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 32px;
+            }
+            
+            .items-showcase {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 15px;
+            }
+            
+            .item-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+            
+            .result-icon {
+                width: 120px;
+                height: 120px;
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎰 ОТКРОЙ КЕЙС 🎰</h1>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalOpens">0</div>
+                <div class="stat-label">Всего открыто</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="bestItem">-</div>
+                <div class="stat-label">Лучший приз</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalValue">0₸</div>
+                <div class="stat-label">Общая ценность</div>
+            </div>
+        </div>
+
+        <div class="case-container">
+            <div class="roulette-container">
+                <div class="roulette-track" id="rouletteTrack">
+                    <!-- Items will be generated dynamically -->
+                </div>
+                <div class="roulette-highlight"></div>
+            </div>
+            <div class="case" id="case">
+                🎰 ОТКРЫТЬ КЕЙС
+            </div>
+        </div>
+
+        <div class="items-showcase">
+            <div class="item">
+                <div class="item-icon">
+                    <img src="iphone17pro.jpg" alt="iPhone 17 Pro">
+                </div>
+                <div class="item-name">iPhone 17 Pro</div>
+                <div class="item-rarity">Легендарный</div>
+            </div>
+            <div class="item">
+                <div class="item-icon">
+                    <img src="dyson.jpg" alt="Dyson Фен">
+                </div>
+                <div class="item-name">Dyson Фен</div>
+                <div class="item-rarity">Эпический</div>
+            </div>
+            <div class="item">
+                <div class="item-icon">
+                    <img src="canon_mark2.jpg" alt="Canon Mark 2">
+                </div>
+                <div class="item-name">Canon Mark 2</div>
+                <div class="item-rarity">Эпический</div>
+            </div>
+            <div class="item">
+                <div class="item-icon">
+                    <img src="zy_cert.png" alt="Сертификат ЗЯ">
+                </div>
+                <div class="item-name">Сертификат ЗЯ</div>
+                <div class="item-rarity">Редкий</div>
+            </div>
+            <div class="item">
+                <div class="item-icon">
+                    <img src="50000.png" alt="50 000 ₸">
+                </div>
+                <div class="item-name">50 000 ₸</div>
+                <div class="item-rarity">Мифический</div>
+            </div>
+            <div class="item">
+                <div class="item-icon">😢</div>
+                <div class="item-name">Ничего</div>
+                <div class="item-rarity">Обычный</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="result-modal" id="resultModal">
+        <div class="result-content">
+            <div class="result-item">
+                <div class="result-icon" id="resultIcon">🎁</div>
+                <div class="result-title" id="resultTitle">Поздравляем!</div>
+                <div class="result-message" id="resultMessage">
+                    Молодец! Сладуся, подарок можешь забрать 10 марта.
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeModal()">Отлично!</button>
+        </div>
+    </div>
+
+    <script>
+        const items = [
+            { name: 'iPhone 17 Pro', icon: '📱', image: 'iphone17pro.jpg', rarity: 'Легендарный', value: 500000, weight: 16.67 },
+            { name: 'Dyson Фен', icon: '💨', image: 'dyson.jpg', rarity: 'Эпический', value: 150000, weight: 16.67 },
+            { name: 'Canon Mark 2', icon: '📷', image: 'canon_mark2.jpg', rarity: 'Эпический', value: 200000, weight: 16.67 },
+            { name: 'Сертификат ЗЯ', icon: '🎫', image: 'zy_cert.png', rarity: 'Редкий', value: 100000, weight: 16.67 },
+            { name: '50 000 ₸', icon: '💰', image: '50000.png', rarity: 'Мифический', value: 50000, weight: 16.67 },
+            { name: 'Ничего', icon: '😢', image: null, rarity: 'Обычный', value: 0, weight: 16.65 }
+        ];
+
+        let stats = {
+            totalOpens: 0,
+            bestItem: '-',
+            totalValue: 0
+        };
+
+        function getRandomItem() {
+            const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+            let random = Math.random() * totalWeight;
+            
+            for (let item of items) {
+                random -= item.weight;
+                if (random <= 0) {
+                    return item;
+                }
+            }
+            return items[items.length - 1];
+        }
+
+        function initializeRoulette() {
+            const track = document.getElementById('rouletteTrack');
+            track.innerHTML = '';
+            
+            // Create exactly 2 sets of items for optimal performance
+            for (let i = 0; i < 2; i++) {
+                const shuffledItems = [...items].sort(() => Math.random() - 0.5);
+                shuffledItems.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'roulette-item';
+                    itemDiv.dataset.itemName = item.name;
+                    
+                    if (item.image) {
+                        itemDiv.innerHTML = `
+                            <img src="${item.image}" alt="${item.name}" loading="lazy">
+                            <div class="roulette-item-name">${item.name}</div>
+                        `;
+                    } else {
+                        itemDiv.innerHTML = `
+                            <div style="font-size: 60px;">${item.icon}</div>
+                            <div class="roulette-item-name">${item.name}</div>
+                        `;
+                    }
+                    
+                    track.appendChild(itemDiv);
+                });
+            }
+        }
+
+        function openCase() {
+            const caseElement = document.getElementById('case');
+            const track = document.getElementById('rouletteTrack');
+            
+            if (caseElement.classList.contains('spinning')) {
+                return;
+            }
+            
+            caseElement.classList.add('spinning');
+            
+            // Get random winning item first
+            const wonItem = getRandomItem();
+            
+            // Generate roulette with guaranteed winner
+            generateRouletteWithWinner(wonItem);
+            
+            // Force reflow to ensure elements are rendered
+            track.offsetHeight;
+            
+            // Calculate position to center the winning item
+            const itemWidth = 220; // width + margin
+            const containerWidth = track.parentElement.offsetWidth;
+            const centerPosition = containerWidth / 2;
+            
+            // Find position of winning item in the middle set (3rd set)
+            let winningPosition = 0;
+            const rouletteItems = track.querySelectorAll('.roulette-item');
+            const itemsPerSet = items.length;
+            const middleSetStart = itemsPerSet * 2; // Start of 3rd set
+            
+            for (let i = middleSetStart; i < middleSetStart + itemsPerSet; i++) {
+                if (rouletteItems[i] && rouletteItems[i].dataset.itemName === wonItem.name) {
+                    winningPosition = i * itemWidth;
+                    break;
+                }
+            }
+            
+            // Calculate final position (center the winning item)
+            const finalPosition = -(winningPosition - centerPosition + itemWidth / 2);
+            
+            // Add extra spins for effect (2-3 full rotations)
+            const totalItems = rouletteItems.length;
+            const extraSpins = Math.floor(Math.random() * 2 + 2) * totalItems * itemWidth;
+            const totalDistance = finalPosition - extraSpins;
+            
+            // Start spinning immediately
+            setTimeout(() => {
+                track.style.transform = `translateX(${totalDistance}px)`;
+            }, 50);
+            
+            // Show result after animation
+            setTimeout(() => {
+                caseElement.classList.remove('spinning');
+                showResult(wonItem);
+                updateStats(wonItem);
+            }, 3000);
+        }
+
+        function generateRouletteWithWinner(winningItem) {
+            const track = document.getElementById('rouletteTrack');
+            track.innerHTML = '';
+            
+            // Create 5 sets of items for seamless infinite scroll
+            for (let i = 0; i < 5; i++) {
+                const shuffledItems = [...items].sort(() => Math.random() - 0.5);
+                
+                // Ensure winning item appears in the middle set
+                if (i === 2) {
+                    const winnerIndex = Math.floor(Math.random() * shuffledItems.length);
+                    const winner = shuffledItems.find(item => item.name === winningItem.name);
+                    shuffledItems[winnerIndex] = winner;
+                }
+                
+                shuffledItems.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'roulette-item';
+                    itemDiv.dataset.itemName = item.name;
+                    
+                    if (item.image) {
+                        itemDiv.innerHTML = `
+                            <img src="${item.image}" alt="${item.name}" loading="lazy">
+                            <div class="roulette-item-name">${item.name}</div>
+                        `;
+                    } else {
+                        itemDiv.innerHTML = `
+                            <div style="font-size: 60px;">${item.icon}</div>
+                            <div class="roulette-item-name">${item.name}</div>
+                        `;
+                    }
+                    
+                    track.appendChild(itemDiv);
+                });
+            }
+        }
+
+        function showResult(item) {
+            const modal = document.getElementById('resultModal');
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const message = document.getElementById('resultMessage');
+            
+            if (item.image) {
+                icon.innerHTML = `<img src="${item.image}" alt="${item.name}">`;
+            } else {
+                icon.textContent = item.icon;
+            }
+            
+            title.textContent = `Вы выиграли: ${item.name}!`;
+            
+            if (item.value > 0) {
+                message.textContent = `Молодец! Сладуся, подарок можешь забрать 10 марта. Ценность: ${item.value.toLocaleString()} ₸`;
+            } else {
+                message.textContent = 'В этот раз ничего не выпало, но не расстраивайся! Попробуй еще раз!';
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        function updateStats(item) {
+            stats.totalOpens++;
+            stats.totalValue += item.value;
+            
+            if (item.value > 0 && (stats.bestItem === '-' || item.value > getBestItemValue())) {
+                stats.bestItem = item.name;
+            }
+            
+            document.getElementById('totalOpens').textContent = stats.totalOpens;
+            document.getElementById('bestItem').textContent = stats.bestItem;
+            document.getElementById('totalValue').textContent = stats.totalValue.toLocaleString() + '₸';
+        }
+
+        function getBestItemValue() {
+            const bestItem = items.find(item => item.name === stats.bestItem);
+            return bestItem ? bestItem.value : 0;
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+
+        // Initialize roulette on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeRoulette();
+        });
+
+        document.getElementById('case').addEventListener('click', openCase);
+
+        // Закрытие модального окна при клике на фон
+        document.getElementById('resultModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Case-insensitive text handling
+        function normalizeText(text) {
+            return text.toString().toLowerCase().trim();
+        }
+
+        // Add case-insensitive keyboard support
+        document.addEventListener('keydown', function(e) {
+            const key = normalizeText(e.key);
+            
+            if (key === ' ' || key === 'enter' || key === 'открыть' || key === 'open') {
+                e.preventDefault();
+                if (!document.getElementById('case').classList.contains('spinning')) {
+                    openCase();
+                }
+            } else if (key === 'escape' || key === 'esc' || key === 'закрыть' || key === 'close') {
+                e.preventDefault();
+                closeModal();
+            } else if (key === 'r' || key === 'restart' || key === 'перезапуск') {
+                e.preventDefault();
+                location.reload();
+            }
+        });
+
+        // Сохранение статистики в localStorage
+        function saveStats() {
+            localStorage.setItem('caseStats', JSON.stringify(stats));
+        }
+
+        function loadStats() {
+            const saved = localStorage.getItem('caseStats');
+            if (saved) {
+                stats = JSON.parse(saved);
+                document.getElementById('totalOpens').textContent = stats.totalOpens;
+                document.getElementById('bestItem').textContent = stats.bestItem;
+                document.getElementById('totalValue').textContent = stats.totalValue.toLocaleString() + '₸';
+            }
+        }
+
+        // Загрузка статистики при открытии страницы
+        loadStats();
+
+        // Сохранение статистики при каждом обновлении
+        window.addEventListener('beforeunload', saveStats);
+    </script>
+</body>
+</html>
